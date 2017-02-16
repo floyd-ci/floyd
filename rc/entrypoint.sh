@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Execute system setup hook
+if [ -f /systemsetup.sh ]
+then
+    . /systemsetup.sh
+fi
+
 # If we are running docker natively, we want to create a user in the container
 # with the same UID and GID as the user on the host machine, so that any files
 # created are owned by that user. Without this they are all owned by root.
@@ -15,8 +21,8 @@ if [[ -n $BUILDER_UID ]] && [[ -n $BUILDER_GID ]]; then
     chown -R $BUILDER_UID:$BUILDER_GID /binary
 
     # Run the command as the specified user/group.
-    exec chpst -u :$BUILDER_UID:$BUILDER_GID ctest -S entrypoint.cmake "$@"
+    exec chpst -u :$BUILDER_UID:$BUILDER_GID /entrypoint2.sh "$@"
 else
     # Just run the command as root.
-    exec ctest -S entrypoint.cmake "$@"
+    exec /entrypoint2.sh "$@"
 fi
