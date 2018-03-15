@@ -11,17 +11,15 @@ fi
 # created are owned by that user. Without this they are all owned by root.
 if test -n "$BUILDER_UID" && test -n "$BUILDER_GID"
 then
-    groupadd -o -g $BUILDER_GID $BUILDER_GROUP 2> /dev/null
-    useradd -o -m -g $BUILDER_GID -u $BUILDER_UID $BUILDER_USER 2> /dev/null
-
-    # Make sure the home directory is owned by the specified user/group.
-    chown -R $BUILDER_UID:$BUILDER_GID $HOME
+    groupmod -n ${BUILDER_GROUP}_old $BUILDER_GROUP
+    groupadd -o -g $BUILDER_GID $BUILDER_GROUP
+    useradd -o -m -g $BUILDER_GID -u $BUILDER_UID $BUILDER_USER
 
     # Make sure build artifacts are accessible by the specified user/group.
     chown -R $BUILDER_UID:$BUILDER_GID /binary
 
     # Run the command as the specified user/group.
-    exec chpst -u :$BUILDER_UID:$BUILDER_GID /entrypoint2.sh "$@"
+    exec su-exec $BUILDER_USER /entrypoint2.sh "$@"
 else
     # Just run the command as root.
     exec /entrypoint2.sh "$@"
