@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Execute user setup hook
 if [ -f /usersetup.sh ]
