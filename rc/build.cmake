@@ -37,6 +37,16 @@ else()
   ctest_start("@BUILD_MODEL@" APPEND)
 endif()
 
+set(CTEST_SUBMIT_URL "@SUBMIT_URL@")
+if(CMAKE_VERSION VERSION_LESS "3.14" AND
+    CTEST_SUBMIT_URL MATCHES "^([^:]+)://(([^:@]+)(:([^@]+))?@)?([^/]+)(.*)$")
+  set(CTEST_DROP_METHOD "${CMAKE_MATCH_1}")
+  set(CTEST_DROP_SITE_USER "${CMAKE_MATCH_3}")
+  set(CTEST_DROP_SITE_PASWORD "${CMAKE_MATCH_5}")
+  set(CTEST_DROP_SITE "${CMAKE_MATCH_6}")
+  set(CTEST_DROP_LOCATION "${CMAKE_MATCH_7}")
+endif()
+
 if("update" IN_LIST BUILD_STEPS)
   set(CTEST_UPDATE_COMMAND "$ENV{CTEST_UPDATE_COMMAND}")
   ctest_update()
