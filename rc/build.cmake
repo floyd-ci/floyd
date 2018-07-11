@@ -73,6 +73,17 @@ if("coverage" IN_LIST BUILD_STEPS)
   endif()
 endif()
 
+if("gcovtar" IN_LIST BUILD_STEPS)
+  include(CTestCoverageCollectGCOV)
+  ctest_coverage_collect_gcov(TARBALL "${CTEST_BINARY_DIRECTORY}/gcov.tbz2")
+  if("submit" IN_LIST BUILD_STEPS)
+    ctest_submit(
+      CDASH_UPLOAD "${CTEST_BINARY_DIRECTORY}/gcov.tbz2"
+      CDASH_UPLOAD_TYPE GcovTar
+      )
+  endif()
+endif()
+
 if("memcheck" IN_LIST BUILD_STEPS)
   ctest_memcheck(PARALLEL_LEVEL @NPROC@)
   if("submit" IN_LIST BUILD_STEPS)
