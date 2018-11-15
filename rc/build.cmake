@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.7)
 
-set(CTEST_SOURCE_DIRECTORY "/source")
-set(CTEST_BINARY_DIRECTORY "/binary/@CONFIG@")
+set(CTEST_SOURCE_DIRECTORY "@SOURCE_DIRECTORY@")
+set(CTEST_BINARY_DIRECTORY "@BINARY_DIRECTORY@")
 
 if("clean" IN_LIST BUILD_STEPS)
-  ctest_empty_binary_directory(${CTEST_BINARY_DIRECTORY})
+  ctest_empty_binary_directory("@BINARY_DIRECTORY@")
 endif()
 
 site_name(CTEST_SITE)
@@ -17,7 +17,7 @@ set(CTEST_MEMORYCHECK_COMMAND "$ENV{CTEST_MEMORYCHECK_COMMAND}")
 set(CTEST_MEMORYCHECK_TYPE "$ENV{CTEST_MEMORYCHECK_TYPE}")
 
 if("update" IN_LIST BUILD_STEPS)
-  if(NOT EXISTS "${CTEST_SOURCE_DIRECTORY}/CMakeLists.txt")
+  if(NOT EXISTS "@SOURCE_DIRECTORY@/CMakeLists.txt")
     set(CTEST_CHECKOUT_COMMAND "$ENV{CTEST_CHECKOUT_COMMAND}")
   endif()
   find_program(CTEST_BZR_COMMAND bzr)
@@ -85,10 +85,10 @@ endif()
 
 if("gcovtar" IN_LIST BUILD_STEPS)
   include(CTestCoverageCollectGCOV)
-  ctest_coverage_collect_gcov(TARBALL "${CTEST_BINARY_DIRECTORY}/gcov.tbz2")
+  ctest_coverage_collect_gcov(TARBALL "@BINARY_DIRECTORY@/gcov.tbz2")
   if("submit" IN_LIST BUILD_STEPS)
     ctest_submit(
-      CDASH_UPLOAD "${CTEST_BINARY_DIRECTORY}/gcov.tbz2"
+      CDASH_UPLOAD "@BINARY_DIRECTORY@/gcov.tbz2"
       CDASH_UPLOAD_TYPE GcovTar
       )
   endif()
@@ -103,7 +103,7 @@ endif()
 
 if("install" IN_LIST BUILD_STEPS)
   execute_process(COMMAND cmake -DCMAKE_INSTALL_PREFIX=/prefix -P cmake_install.cmake
-    WORKING_DIRECTORY "/binary/@CONFIG@"
+    WORKING_DIRECTORY "@BINARY_DIRECTORY@"
     RESULT_VARIABLE ret
     )
   if(NOT ret EQUAL 0)
