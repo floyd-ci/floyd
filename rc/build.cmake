@@ -8,17 +8,12 @@ if("clean" IN_LIST BUILD_STEPS)
 endif()
 
 site_name(CTEST_SITE)
-
-set(CTEST_CUSTOM_MAXIMUM_NUMBER_OF_WARNINGS 1000)
-set(CTEST_CMAKE_GENERATOR "Ninja")
-
-set(CTEST_COVERAGE_COMMAND "$ENV{CTEST_COVERAGE_COMMAND}")
-set(CTEST_MEMORYCHECK_COMMAND "$ENV{CTEST_MEMORYCHECK_COMMAND}")
-set(CTEST_MEMORYCHECK_TYPE "$ENV{CTEST_MEMORYCHECK_TYPE}")
+set(CTEST_CMAKE_GENERATOR "@CMAKE_GENERATOR@")
+set(CTEST_USE_LAUNCHERS "@USE_LAUNCHERS@")
 
 if("update" IN_LIST BUILD_STEPS)
   if(NOT EXISTS "@SOURCE_DIRECTORY@/CMakeLists.txt")
-    set(CTEST_CHECKOUT_COMMAND "$ENV{CTEST_CHECKOUT_COMMAND}")
+    set(CTEST_CHECKOUT_COMMAND "@CHECKOUT_COMMAND@")
   endif()
   find_program(CTEST_BZR_COMMAND bzr)
   find_program(CTEST_CVS_COMMAND cvs)
@@ -48,7 +43,7 @@ if(CMAKE_VERSION VERSION_LESS "3.14" AND
 endif()
 
 if("update" IN_LIST BUILD_STEPS)
-  set(CTEST_UPDATE_COMMAND "$ENV{CTEST_UPDATE_COMMAND}")
+  set(CTEST_UPDATE_COMMAND "@UPDATE_COMMAND@")
   ctest_update()
   if("submit" IN_LIST BUILD_STEPS)
     ctest_submit(PARTS Update)
@@ -77,6 +72,7 @@ if("test" IN_LIST BUILD_STEPS)
 endif()
 
 if("coverage" IN_LIST BUILD_STEPS)
+  set(CTEST_COVERAGE_COMMAND "@COVERAGE_COMMAND@")
   ctest_coverage()
   if("submit" IN_LIST BUILD_STEPS)
     ctest_submit(PARTS Coverage)
@@ -85,7 +81,9 @@ endif()
 
 if("gcovtar" IN_LIST BUILD_STEPS)
   include(CTestCoverageCollectGCOV)
-  ctest_coverage_collect_gcov(TARBALL "@BINARY_DIRECTORY@/gcov.tbz2")
+  ctest_coverage_collect_gcov(TARBALL "@BINARY_DIRECTORY@/gcov.tbz2"
+    GCOV_COMMAND "@COVERAGE_COMMAND@"
+    )
   if("submit" IN_LIST BUILD_STEPS)
     ctest_submit(
       CDASH_UPLOAD "@BINARY_DIRECTORY@/gcov.tbz2"
@@ -95,6 +93,8 @@ if("gcovtar" IN_LIST BUILD_STEPS)
 endif()
 
 if("memcheck" IN_LIST BUILD_STEPS)
+  set(CTEST_MEMORYCHECK_COMMAND "@MEMORYCHECK_COMMAND@")
+  set(CTEST_MEMORYCHECK_TYPE "@MEMORYCHECK_TYPE@")
   ctest_memcheck(PARALLEL_LEVEL @NPROC@)
   if("submit" IN_LIST BUILD_STEPS)
     ctest_submit(PARTS MemCheck)
@@ -116,3 +116,5 @@ if("done" IN_LIST BUILD_STEPS)
     ctest_submit(PARTS Done)
   endif()
 endif()
+
+set(CTEST_RUN_CURRENT_SCRIPT OFF)

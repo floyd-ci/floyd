@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.7)
-set(CTEST_RUN_CURRENT_SCRIPT 0)
 
 if(NOT BUILD_CONFIGURATIONS OR NOT BUILD_STEPS)
   message(FATAL_ERROR "Nothing to build!")
@@ -46,3 +45,5 @@ if("package" IN_LIST BUILD_STEPS)
     message(FATAL_ERROR "Failed to create package.")
   endif()
 endif()
+
+set(CTEST_RUN_CURRENT_SCRIPT OFF)
