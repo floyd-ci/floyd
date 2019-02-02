@@ -146,7 +146,6 @@ func dockerfile(b *builder) string {
 	fmt.Fprintln(&buf, "FROM", b.Base)
 	fmt.Fprintln(&buf, "COPY --from=builder /usr/local/bin/su-exec /usr/local/bin/su-exec")
 	fmt.Fprintln(&buf, "COPY . /")
-	fmt.Fprintln(&buf, "RUN chmod +x *.sh")
 
 	if len(b.APK) > 0 {
 		fmt.Fprintln(&buf, "RUN apk --no-cache add", strings.Join(b.APK, " "))
@@ -184,11 +183,11 @@ func writeTarRecord(w *tar.Writer, fn, contents string) error {
 }
 
 func buildImage(ctx context.Context, cli *client.Client, image string, b *builder) error {
-	buf := bytes.NewBuffer(nil)
-	w := tar.NewWriter(buf)
-	if err := writeTarRC(w); err != nil {
+	var buf bytes.Buffer
+	if _, err := buf.Write(tarRC()); err != nil {
 		return err
 	}
+	w := tar.NewWriter(&buf)
 	if err := writeTarRecord(w, "Dockerfile", dockerfile(b)); err != nil {
 		return err
 	}
@@ -196,7 +195,7 @@ func buildImage(ctx context.Context, cli *client.Client, image string, b *builde
 		return err
 	}
 
-	resp, err := cli.ImageBuild(ctx, buf, types.ImageBuildOptions{
+	resp, err := cli.ImageBuild(ctx, &buf, types.ImageBuildOptions{
 		Tags:       []string{image},
 		PullParent: true,
 	})
