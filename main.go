@@ -184,7 +184,7 @@ func writeTarRecord(w *tar.Writer, fn, contents string) error {
 
 func buildImage(ctx context.Context, cli *client.Client, image string, b *builder) error {
 	var buf bytes.Buffer
-	if _, err := buf.Write(tarRC()); err != nil {
+	if err := tarRC(&buf); err != nil {
 		return err
 	}
 	w := tar.NewWriter(&buf)
