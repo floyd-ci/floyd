@@ -8,7 +8,6 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/hex"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -25,6 +24,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/docker/pkg/term"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -38,26 +38,26 @@ func init() {
 	flag.StringVar(&sourceDir, "source-dir", ".", "source directory")
 	flag.StringVar(&binaryDir, "binary-dir", "build", "binary directory")
 	flag.StringVar(&prefixDir, "prefix-dir", "prefix", "prefix directory")
-	flag.StringVar(&configFile, "config-file", ".floyd.json", "configuration file")
+	flag.StringVar(&configFile, "config-file", ".floyd.yaml", "configuration file")
 }
 
 type builder struct {
-	Base            string            `json:"base"`
-	APK             []string          `json:"apk"`
-	APT             []string          `json:"apt"`
-	RUN             []string          `json:"run"`
-	Model           string            `json:"model"`
-	Configurations  []string          `json:"configurations"`
-	Steps           []string          `json:"steps"`
-	CMakeGenerator  string            `json:"cmake-generator"`
-	CheckoutCommand string            `json:"checkout-command"`
-	UpdateCommand   string            `json:"update-command"`
-	CoverageCommand string            `json:"coverage-command"`
-	MemcheckCommand string            `json:"memcheck-command"`
-	MemcheckType    string            `json:"memcheck-type"`
-	SubmitURL       string            `json:"submit-url"`
-	Cache           map[string]string `json:"cache"`
-	Env             map[string]string `json:"env"`
+	Base            string            `yaml:"base"`
+	APK             []string          `yaml:"apk"`
+	APT             []string          `yaml:"apt"`
+	RUN             []string          `yaml:"run"`
+	Model           string            `yaml:"model"`
+	Configurations  []string          `yaml:"configurations,flow"`
+	Steps           []string          `yaml:"steps,flow"`
+	CMakeGenerator  string            `yaml:"cmake-generator"`
+	CheckoutCommand string            `yaml:"checkout-command"`
+	UpdateCommand   string            `yaml:"update-command"`
+	CoverageCommand string            `yaml:"coverage-command"`
+	MemcheckCommand string            `yaml:"memcheck-command"`
+	MemcheckType    string            `yaml:"memcheck-type"`
+	SubmitURL       string            `yaml:"submit-url"`
+	Cache           map[string]string `yaml:"cache"`
+	Env             map[string]string `yaml:"env"`
 }
 
 func (b *builder) Tag() string {
@@ -91,7 +91,7 @@ func main() {
 	}
 
 	builders := make(map[string]builder)
-	err = json.Unmarshal(data, &builders)
+	err = yaml.Unmarshal(data, &builders)
 	if err != nil {
 		log.Fatal(err)
 	}
