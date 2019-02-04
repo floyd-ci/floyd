@@ -6,9 +6,10 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 func main() {
@@ -20,28 +21,46 @@ func main() {
 func createTar() []byte {
 	var buf bytes.Buffer
 	w := tar.NewWriter(&buf)
-	fs, err := ioutil.ReadDir("rc")
-	if err != nil {
-		log.Fatal(err)
-	}
-	for _, f := range fs {
-		err := w.WriteHeader(&tar.Header{
-			Name:     f.Name(),
-			Mode:     int64(f.Mode()),
-			Size:     f.Size(),
-			Typeflag: '0',
+	err := filepath.Walk("rc", func(path string, fi os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// skip root dir
+		if path == "rc" {
+			return nil
+		}
+		if fi.IsDir() {
+			err = w.WriteHeader(&tar.Header{
+				Name:     strings.TrimPrefix(path, "rc/") + "/",
+				Mode:     int64(fi.Mode()),
+				Typeflag: tar.TypeDir,
+			})
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+		err = w.WriteHeader(&tar.Header{
+			Name:     strings.TrimPrefix(path, "rc/"),
+			Mode:     int64(fi.Mode()),
+			Size:     fi.Size(),
+			Typeflag: tar.TypeReg,
 		})
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
-		file, err := os.Open("rc/" + f.Name())
+		file, err := os.Open(path)
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		defer file.Close()
 		if _, err := io.Copy(w, file); err != nil {
-			log.Fatal(err)
+			return err
 		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
 	}
 	if err := w.Close(); err != nil {
 		log.Fatal(err)

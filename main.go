@@ -1,5 +1,8 @@
 package main
 
+//go:generate git submodule update --init
+//go:generate mkdir -p rc/usr/local/bin
+//go:generate musl-gcc -Os -s -o rc/usr/local/bin/su-exec external/su-exec/su-exec.c -static
 //go:generate go run scripts/generate.go
 
 import (
@@ -137,14 +140,7 @@ func writeCache(file string, entries map[string]string) error {
 
 func dockerfile(b *builder) string {
 	var buf strings.Builder
-	fmt.Fprintln(&buf, "FROM alpine:edge AS builder")
-	fmt.Fprintln(&buf, "RUN apk --update add gcc git musl-dev")
-	fmt.Fprintln(&buf, "RUN git config --global advice.detachedHead false")
-	fmt.Fprintln(&buf, "RUN git clone -b v0.2 --depth 1 https://github.com/ncopa/su-exec.git")
-	fmt.Fprintln(&buf, "RUN gcc -O3 -o /usr/local/bin/su-exec /su-exec/su-exec.c -static")
-
 	fmt.Fprintln(&buf, "FROM", b.Base)
-	fmt.Fprintln(&buf, "COPY --from=builder /usr/local/bin/su-exec /usr/local/bin/su-exec")
 	fmt.Fprintln(&buf, "COPY . /")
 
 	if len(b.APK) > 0 {
@@ -152,8 +148,8 @@ func dockerfile(b *builder) string {
 	}
 
 	if len(b.APT) > 0 {
-		fmt.Fprintln(&buf, "RUN apt-get -qq update",
-			"&& apt-get -qq install -y --no-install-recommends", strings.Join(b.APT, " "),
+		fmt.Fprintln(&buf, "RUN apt-get update",
+			"&& apt-get install -y --no-install-recommends", strings.Join(b.APT, " "),
 			"&& rm -rf /var/lib/apt/lists/*")
 	}
 
