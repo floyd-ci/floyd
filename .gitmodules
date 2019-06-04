@@ -1,3 +1,0 @@
-[submodule "external/su-exec"]
-	path = external/su-exec
-	url = https://github.com/ncopa/su-exec.git

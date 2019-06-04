@@ -4,13 +4,12 @@ alpine-gcc:
   - cmake
   - g++
   - ninja
-  - shadow
   cmake-generator: Ninja
   model: Experimental
   configurations: [ Debug ]
   steps: [ clean, start, configure, build, done ]
 debian-gcc:
-  base: debian
+  base: debian:stable-slim
   apt:
   - cmake
   - g++

@@ -1,8 +1,5 @@
 package main
 
-//go:generate git submodule update --init
-//go:generate mkdir -p rc/usr/local/bin
-//go:generate musl-gcc -Os -s -o rc/usr/local/bin/su-exec external/su-exec/su-exec.c -static
 //go:generate go run scripts/generate.go
 
 import (
@@ -157,7 +154,6 @@ func dockerfile(b *builder) string {
 		fmt.Fprintln(&buf, "RUN", strings.Join(b.RUN, " "))
 	}
 
-	fmt.Fprintln(&buf, "ENTRYPOINT [\"/entrypoint.sh\"]")
 	return buf.String()
 }
 
@@ -214,16 +210,7 @@ func execBuild(ctx context.Context, cli *client.Client, image, name string, b *b
 		return err
 	}
 
-	grp, err := user.LookupGroupId(usr.Gid)
-	if err != nil {
-		return err
-	}
-
 	env := []string{
-		"BUILDER_UID=" + usr.Uid,
-		"BUILDER_GID=" + grp.Gid,
-		"BUILDER_USER=" + usr.Username,
-		"BUILDER_GROUP=" + grp.Name,
 		"CCACHE_DIR=/ccache",
 	}
 
@@ -234,8 +221,10 @@ func execBuild(ctx context.Context, cli *client.Client, image, name string, b *b
 	config := &container.Config{
 		Image:    image,
 		Hostname: hostname,
+		User:     usr.Uid + ":" + usr.Gid,
 		Env:      env,
 		Cmd: []string{
+			"ctest", "-S", "/entrypoint.cmake",
 			"-DBUILD_MODEL=" + b.Model,
 			"-DBUILD_CONFIGURATIONS=" + strings.Join(b.Configurations, ";"),
 			"-DBUILD_STEPS=" + strings.Join(b.Steps, ";"),
@@ -282,6 +271,12 @@ func execBuild(ctx context.Context, cli *client.Client, image, name string, b *b
 				Source:   os.Getenv("CCACHE_DIR"),
 				Target:   "/ccache",
 				ReadOnly: false,
+			},
+			mount.Mount{
+				Type:     mount.TypeBind,
+				Source:   "/etc/passwd",
+				Target:   "/etc/passwd",
+				ReadOnly: true,
 			},
 		},
 	}
